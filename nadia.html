@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Examen Sistemas Operativos PRO</title>
+<style>
+body{font-family:Arial; margin:40px;}
+h1{text-align:center;}
+.question{margin-bottom:20px; padding:15px; border:1px solid #ccc; border-radius:8px;}
+.correct{color:green; font-weight:bold;}
+.incorrect{color:red; font-weight:bold;}
+#timer{font-size:20px; font-weight:bold; color:red;}
+button{padding:12px 25px; font-size:16px; margin-top:20px; cursor:pointer;}
+.explanation{margin-top:8px; font-size:14px;}
+</style>
+</head>
+<body>
+
+<h1>Examen Final – Sistemas Operativos</h1>
+<div>Tiempo restante: <span id="timer">30:00</span></div>
+
+<form id="quizForm"></form>
+<button id="submitBtn" onclick="submitExam()">Entregar examen</button>
+
+<h2 id="result"></h2>
+
+<script>
+
+const timeLimit = 30 * 60;
+let timeLeft = timeLimit;
+let timerInterval;
+
+function startTimer(){
+timerInterval = setInterval(()=>{
+timeLeft--;
+let m=Math.floor(timeLeft/60);
+let s=timeLeft%60;
+document.getElementById("timer").textContent=`${m}:${s<10?'0'+s:s}`;
+if(timeLeft<=0){
+clearInterval(timerInterval);
+submitExam();
+}
+},1000);
+}
+
+const questions = [
+{q:"¿Qué es software?",o:["Parte física","Conjunto de instrucciones y programas","Dispositivo externo","Componente eléctrico"],c:1,e:"El software son los programas que ejecuta el hardware."},
+{q:"¿Qué es hardware?",o:["Programa","Parte lógica","Componentes físicos","Archivo digital"],c:2,e:"Hardware son los componentes físicos del sistema."},
+{q:"Característica del software:",o:["Tangible","Evolutivo","Mecánico","Eléctrico"],c:1,e:"El software puede actualizarse y evolucionar."},
+{q:"Hardware de procesamiento:",o:["Monitor","CPU","Teclado","Bocina"],c:1,e:"La CPU realiza cálculos y procesa datos."},
+{q:"Hardware de almacenamiento:",o:["RAM","Mouse","Monitor","Micrófono"],c:0,e:"La RAM almacena datos temporalmente."},
+{q:"Hardware de entrada:",o:["Monitor","Teclado","Impresora","SSD"],c:1,e:"El teclado permite ingresar datos."},
+{q:"Hardware de salida:",o:["Mouse","RAM","Monitor","CPU"],c:2,e:"El monitor muestra resultados."},
+{q:"Software de sistema:",o:["Linux","Word","Excel","Photoshop"],c:0,e:"Linux es un sistema operativo."},
+{q:"Software de aplicación:",o:["Kernel","AutoCAD","BIOS","Driver"],c:1,e:"AutoCAD es aplicación para diseño."},
+{q:"Software de programación:",o:["Windows","NetBeans","Android","Chrome"],c:1,e:"NetBeans permite programar."},
+{q:"¿Qué es un compilador?",o:["Traduce código completo","Ejecuta línea por línea","Antivirus","Driver"],c:0,e:"Convierte código fuente en ejecutable."},
+{q:"¿Qué es un intérprete?",o:["Traduce todo antes","Ejecuta línea por línea","Compresor","BIOS"],c:1,e:"Ejecuta el código mientras lo traduce."},
+{q:"¿Qué es un depurador?",o:["Antivirus","Detector de errores","Compilador","Sistema operativo"],c:1,e:"Ayuda a encontrar errores en programas."},
+{q:"¿Qué es un sistema operativo?",o:["Editor","Administrador de recursos","Juego","Aplicación"],c:1,e:"Gestiona CPU, memoria y dispositivos."},
+{q:"¿Qué es el kernel?",o:["Interfaz gráfica","Parte central del SO","Aplicación","Antivirus"],c:1,e:"Es el núcleo del sistema."},
+{q:"Modo núcleo es:",o:["Usuario limitado","Nivel privilegiado","Aplicación","Red"],c:1,e:"Tiene acceso total al hardware."},
+{q:"Modo usuario:",o:["Sin restricciones","Nivel limitado","Kernel","Driver"],c:1,e:"Protege el sistema de errores."},
+{q:"Proceso es:",o:["Archivo","Programa en ejecución","Carpeta","RAM"],c:1,e:"Un programa activo en memoria."},
+{q:"Hilo es:",o:["Subproceso","Disco","BIOS","USB"],c:0,e:"Unidad de ejecución dentro del proceso."},
+{q:"Multitarea:",o:["Un proceso","Varios procesos","Sin red","Sin RAM"],c:1,e:"Permite ejecutar múltiples procesos."},
+{q:"Monotarea:",o:["Un proceso a la vez","Varios usuarios","Red","Distribuido"],c:0,e:"Solo ejecuta uno a la vez."},
+{q:"Multiusuario:",o:["Un usuario","Varios usuarios simultáneos","Sin red","Embebido"],c:1,e:"Permite múltiples sesiones."},
+{q:"FCFS significa:",o:["Round Robin","First Come First Served","Tiempo real","FIFO invertido"],c:1,e:"El primero en llegar se ejecuta primero."},
+{q:"Round Robin:",o:["Turnos de tiempo","Prioridad fija","Monotarea","Sin planificación"],c:0,e:"Asigna un quantum de tiempo."},
+{q:"Gestión de memoria:",o:["Solo disco","Asignar y liberar RAM","Solo CPU","Red"],c:1,e:"Controla uso eficiente de memoria."},
+{q:"Memoria virtual:",o:["Extensión en disco","Solo RAM","USB","Cache"],c:0,e:"Usa disco como apoyo a RAM."},
+{q:"Protección memoria:",o:["Antivirus","Aislar procesos","Driver","Firewall"],c:1,e:"Evita invasión entre procesos."},
+{q:"Sistema de archivos:",o:["Crear y organizar archivos","Solo ejecutar","Solo imprimir","Solo red"],c:0,e:"Administra almacenamiento."},
+{q:"Control de acceso:",o:["Permisos","Reiniciar","Formatear","Driver"],c:0,e:"Define lectura y escritura."},
+{q:"Drivers:",o:["Juegos","Programas hardware","Virus","Carpetas"],c:1,e:"Permiten comunicación con dispositivos."},
+{q:"Colas E/S:",o:["Filas de espera","RAM","CPU","BIOS"],c:0,e:"Organizan solicitudes a dispositivos."},
+{q:"Gestión de red:",o:["Comunicación equipos","Solo RAM","Solo CPU","GUI"],c:0,e:"Administra conexión entre sistemas."},
+{q:"Autenticación:",o:["Permisos","Verificar identidad","Cifrar","Reiniciar"],c:1,e:"Confirma quién eres."},
+{q:"Autorización:",o:["Verificar identidad","Definir permisos","Cifrar","Driver"],c:1,e:"Determina qué puedes hacer."},
+{q:"Cifrado:",o:["Datos ilegibles","Borrar","Reiniciar","Formatear"],c:0,e:"Protege información."},
+{q:"Sistema monolítico:",o:["Todo en núcleo","Servicios externos","Virtual","Distribuido"],c:0,e:"Todos servicios en kernel."},
+{q:"Microkernel:",o:["Funciones básicas","Todo en kernel","Sin memoria","Sin CPU"],c:0,e:"Solo lo esencial en núcleo."},
+{q:"Núcleo híbrido:",o:["Monolítico","Combina enfoques","Virtual","Embebido"],c:1,e:"Mezcla monolítico y microkernel."},
+{q:"Máquina virtual:",o:["Simula sistemas","Solo RAM","Solo red","GUI"],c:0,e:"Permite varios SO en uno."},
+{q:"SO tiempo real:",o:["Respuesta en tiempo fijo","Juego","Local","GUI"],c:0,e:"Garantiza tiempos límite."},
+{q:"SO distribuido:",o:["Coordina varias máquinas","Local","Monotarea","CLI"],c:0,e:"Funciona como un solo sistema."},
+{q:"SO propietario:",o:["Código abierto","Licencia restringida","Libre","Gratis"],c:1,e:"No permite modificar código."},
+{q:"Código abierto:",o:["Privado","Modificable","Pago obligatorio","Sin licencia"],c:1,e:"Permite modificar código fuente."},
+{q:"Si invade memoria:",o:["Protección falló","Driver","CLI","GUI"],c:0,e:"La protección debe aislar procesos."},
+{q:"Servidor con varios usuarios:",o:["Monotarea","Multiusuario","Embebido","Local"],c:1,e:"Permite múltiples sesiones."},
+{q:"CPU por turnos:",o:["FCFS","Round Robin","FIFO inverso","Sin plan"],c:1,e:"Usa quantum de tiempo."},
+{q:"Disco como RAM:",o:["Cache","Memoria virtual","Driver","Kernel"],c:1,e:"Archivo swap."},
+{q:"Servicio falla pero núcleo no:",o:["Monolítico","Microkernel","Local","Monotarea"],c:1,e:"Servicios están separados."},
+{q:"Recompilar todo:",o:["Modular","Monolítico clásico","Virtual","Distribuido"],c:1,e:"Todo depende del núcleo."},
+{q:"Gestión interrupciones:",o:["Ignorar","Atender señales","Reiniciar","Formatear"],c:1,e:"Responde eventos hardware."},
+{q:"API del SO:",o:["Acceso directo hardware","Facilita desarrollo","Reiniciar","Cifrar"],c:1,e:"Interfaz para programadores."},
+{q:"Gestión recursos:",o:["Distribuir CPU y RAM","Apagar","Solo red","Solo GUI"],c:0,e:"Optimiza uso del sistema."},
+{q:"GUI:",o:["Texto","Ventanas e íconos","Kernel","BIOS"],c:1,e:"Interfaz gráfica visual."},
+{q:"CLI:",o:["Ventanas","Comandos texto","Mouse","Íconos"],c:1,e:"Interfaz por comandos."},
+{q:"Evitar fragmentación:",o:["Gestión disco","CPU","RAM","Driver"],c:0,e:"Organiza bloques de almacenamiento."},
+{q:"Exokernel:",o:["Interfaz mínima","Todo kernel","GUI","Driver"],c:0,e:"Delegación directa a aplicaciones."},
+{q:"SO modular:",o:["Carga módulos","Recompilar todo","Sin drivers","Sin memoria"],c:0,e:"Permite agregar componentes dinámicos."},
+{q:"Hipervisor tipo 1:",o:["Sobre SO","Directo hardware","Aplicación","GUI"],c:1,e:"Corre directamente en hardware."},
+{q:"El núcleo siempre:",o:["Permanece en memoria","Se cierra","Es opcional","Es aplicación"],c:0,e:"Controla el sistema continuamente."}
+];
+
+const form=document.getElementById("quizForm");
+
+questions.forEach((q,i)=>{
+let div=document.createElement("div");
+div.className="question";
+div.innerHTML=`<strong>${i+1}. ${q.q}</strong><br>`;
+q.o.forEach((opt,j)=>{
+div.innerHTML+=`<label><input type="radio" name="q${i}" value="${j}"> ${opt}</label><br>`;
+});
+div.innerHTML+=`<div id="fb${i}" class="explanation"></div>`;
+form.appendChild(div);
+});
+
+function submitExam(){
+clearInterval(timerInterval);
+document.getElementById("submitBtn").disabled=true;
+
+let score=0;
+questions.forEach((q,i)=>{
+let sel=document.querySelector(`input[name="q${i}"]:checked`);
+let fb=document.getElementById(`fb${i}`);
+if(sel){
+if(parseInt(sel.value)===q.c){
+score++;
+fb.innerHTML=`<span class="correct">✔ Correcta</span><br>${q.e}`;
+}else{
+fb.innerHTML=`<span class="incorrect">✘ Incorrecta</span><br>${q.e}`;
+}
+}else{
+fb.innerHTML=`<span class="incorrect">✘ Sin responder</span><br>${q.e}`;
+}
+});
+
+let percent=((score/questions.length)*100).toFixed(2);
+document.getElementById("result").innerHTML=
+`Resultado: ${score}/60 — ${percent}%`;
+}
+
+startTimer();
+
+</script>
+
+</body>
+</html>
